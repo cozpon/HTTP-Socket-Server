@@ -15,10 +15,12 @@ const fs = require('fs');
 
     // HTML
 
-const header = function(file, method, ok, date, contentType, connection){
+const header = function(request, file, method, ok, server, date, contentType, connection){
   fs.readFile(file, (err, data) => {
     let dataString = data.toString();
-    process.stdout.write(`\n${method}${ok}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n${dataString}`);
+    process.stdout.write(`\n${method}${ok}\n${server}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n${dataString}`);
+    request.write(`\n${method}${ok}\n${server}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n${dataString}`);
+    request.end();
   });
 };
 
@@ -26,13 +28,11 @@ const header = function(file, method, ok, date, contentType, connection){
 const server = net.createServer((request) => {
   request.on('data', (data) => {
     let dataRequest = data.toString();
-
-    let splitData = dataRequest.split(`\n`);
+    let splitData = dataRequest.split(`\r\n`);
     let httpArray = splitData[0].split(' ');
 
     let requestArray = httpArray[0].split(' ');
-
-    // console.log("REQUEST", httpArray[1]);
+    let server = "Server: " + 'nginx/1.4.6 (Ubuntu)';
     let method = httpArray[0]; // returns GET or POST or SEND.. the METHOD
     let path = httpArray[1]; // returns the ULI
     let spec = httpArray[2]; // returns HTML + version
@@ -44,29 +44,28 @@ const server = net.createServer((request) => {
 
 
     if (method === 'HEAD' || method === 'GET'){
-      console.log(path, "PATH IS HERE");
       switch (path) {
         case '/':
-          header('index.html', method, ok, date, htmlFile, connType);
+          header(request, 'index.html', spec, ok, server, date, htmlFile, connType);
           break;
         case '/index.html':
-          header('index.html', method, ok, date, htmlFile, connType);
+          header(request, 'index.html', spec, ok, server, date, htmlFile, connType);
           break;
         case '/helium.html':
-          header('helium.html', method, ok, date, htmlFile, connType);
+          header(request, 'helium.html', spec, ok, server, date, htmlFile, connType);
           break;
         case '/hydrogen.html':
-          header('hydrogen.html', method, ok, date, htmlFile, connType);
+          header(request, 'hydrogen.html', spec, ok, server, date, htmlFile, connType);
           break;
         case 'styles.css':
-          header('styles.css', method, ok, date, htmlFile, connType);
+          header(request, 'styles.css', spec, ok, server, date, htmlFile, connType);
           break;
         default:
-          header('404.html', method, errorNotFound, date, htmlFile, connType);
+          header(request, '404.html', spec, errorNotFound, server, date, htmlFile, connType);
       }
-    } else header('404.html', method, errorNotFound, date, htmlFile, connType);
+    } else header(request, '404.html', spec, errorNotFound, server, date, htmlFile, connType);
 
-  request.end();
+
   });
 });
 
