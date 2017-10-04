@@ -15,6 +15,7 @@ const header = function(request, file, method, ok, server, date, contentType, co
 
 const server = net.createServer((request) => {
   request.on('data', (data) => {
+    console.log(data.toString());
     let dataRequest = data.toString();
     let splitData = dataRequest.split(`\r\n`);
     let httpArray = splitData[0].split(' ');
@@ -27,6 +28,7 @@ const server = net.createServer((request) => {
     let errorNotFound = ' 404 Not Found'; // hard coded error
     let date = `Date: ${new Date().toUTCString()}`; // gets date of request
     let htmlFile = 'text/html; charset=utf-8'; // hard code HTML file
+    let cssFile = 'text/css; charset=utf-8';
     let connType = 'keep-alive';  // hard code connection type
 
 
@@ -45,7 +47,7 @@ const server = net.createServer((request) => {
           header(request, 'hydrogen.html', spec, ok, server, date, htmlFile, connType);
           break;
         case '/styles.css':
-          header(request, 'styles.css', spec, ok, server, date, htmlFile, connType);
+          header(request, 'styles.css', spec, ok, server, date, cssFile, connType);
           break;
         default:
           header(request, '404.html', spec, errorNotFound, server, date, htmlFile, connType);

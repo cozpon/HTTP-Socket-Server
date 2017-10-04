@@ -1,7 +1,9 @@
 // jshint esversion:6
 let PORT = process.env.PORT || 8080;
-
+console.log("yo daddio");
 const net = require('net');
+
+
 
 const options = {
   port: 8080,
@@ -9,11 +11,12 @@ const options = {
 };
 const clientConnection = new net.connect(options, function(){
   console.log(`connected to server, ${PORT}` );
-
-  clientConnection.write("YO DADDIO");
+  let allArgs = process.argv[2];
+  console.log(process.argv[2], "HEYEYE");
 
   clientConnection.on('data', function(data){
-    console.log(" HEY ", data.toString());
+    console.log(" HEY ");
+
   });
 
   //clientConnection.end();
