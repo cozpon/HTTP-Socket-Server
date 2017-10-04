@@ -4,26 +4,14 @@ let PORT = process.env.PORT || 8080;
 const net = require('net'); // load TCP library
 const fs = require('fs');
 
-
-    // HTTP 200 OK
-    // SERVER
-    // DATE
-    // CONTENT-TYPE
-    // CONTENT-LENGTH
-    // CONNECTION
-    // empty space
-
-    // HTML
-
 const header = function(request, file, method, ok, server, date, contentType, connection){
   fs.readFile(file, (err, data) => {
     let dataString = data.toString();
-    //process.stdout.write(`\n${method}${ok}\n${server}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n ${dataString}\n`);
-    request.write(`${method}${ok}\n${server}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n ${dataString}`);
-    request.end();
+    request.write(`${method}${ok}\n${server}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n${dataString}`, () => {
+      request.end();
+    });
   });
 };
-
 
 const server = net.createServer((request) => {
   request.on('data', (data) => {
