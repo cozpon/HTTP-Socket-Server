@@ -18,8 +18,8 @@ const fs = require('fs');
 const header = function(request, file, method, ok, server, date, contentType, connection){
   fs.readFile(file, (err, data) => {
     let dataString = data.toString();
-    process.stdout.write(`\n${method}${ok}\n${server}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n${dataString}`);
-    request.write(`\n${method}${ok}\n${server}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n${dataString}`);
+    //process.stdout.write(`\n${method}${ok}\n${server}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n ${dataString}\n`);
+    request.write(`${method}${ok}\n${server}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n ${dataString}`);
     request.end();
   });
 };
@@ -31,7 +31,6 @@ const server = net.createServer((request) => {
     let splitData = dataRequest.split(`\r\n`);
     let httpArray = splitData[0].split(' ');
 
-    let requestArray = httpArray[0].split(' ');
     let server = "Server: " + 'nginx/1.4.6 (Ubuntu)';
     let method = httpArray[0]; // returns GET or POST or SEND.. the METHOD
     let path = httpArray[1]; // returns the ULI
@@ -57,7 +56,7 @@ const server = net.createServer((request) => {
         case '/hydrogen.html':
           header(request, 'hydrogen.html', spec, ok, server, date, htmlFile, connType);
           break;
-        case 'styles.css':
+        case '/styles.css':
           header(request, 'styles.css', spec, ok, server, date, htmlFile, connType);
           break;
         default:
