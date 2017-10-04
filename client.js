@@ -16,14 +16,15 @@ const clientConnection = new net.connect(PORT, function(){
     let date = `Date: ${new Date().toUTCString()}`;
 
     if(notifier.includes('-')){
-      console.log("yo u want the header?");
+      clientConnection.write("yo u want the header?");
       // I WANT HEADER
     } else if(notifier.includes('/')){
-      // I'm a url and want a body
-      console.log(`take me to, Host: ${host}/${uri}`);
+      // I'm a URL and have a URI
+      clientConnection.write(`Host: ${host}/${uri}\nConnection: Keep-Alive\nAccept: text/html, application/json\n${date}`);
     }
     else{
-      console.log(`YO take me to, ${host}`);
+      // I'm just a boring URL with nothing else
+      clientConnection.write(`Host: ${host}\nConnection: Keep-Alive\nAccept: text/html, application/json\n${date}`);
     }
 
   }
