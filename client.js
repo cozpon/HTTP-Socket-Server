@@ -5,9 +5,13 @@ const net = require('net');
 const clientConnection = new net.connect(PORT, function(){
   console.log(`connected to server, ${PORT}` );
   let notifier = process.argv[2];
+  clientConnection.on('data', function(data){
+    console.log(data.toString());
+  });
 
   if(notifier === undefined){
-    console.log("Yo daddio, you forgot to put in an argument.\nTry localhost:8080/index.html or something!");
+    console.log(`Yo daddio, you forgot to put in an argument.
+Try writing localhost:8080/index.html or something!`);
   }
   else {
     let directLink = notifier.split('/');
@@ -16,15 +20,33 @@ const clientConnection = new net.connect(PORT, function(){
     let date = `Date: ${new Date().toUTCString()}`;
 
     if(notifier.includes('-')){
-      clientConnection.write("yo u want the header?");
+      let headLink = process.argv[3];
+      let headDirectLink = headLink.split('/');
+      let headURI = headDirectLink[1];
+
+      clientConnection.write(`HEAD /${headURI} HTTP/1.1
+Host: ${headDirectLink[0]}
+User-Agent: Ricky/2.0.4
+Accept: */*
+
+`);
       // I WANT HEADER
     } else if(notifier.includes('/')){
       // I'm a URL and have a URI
-      clientConnection.write(`Host: ${host}/${uri}\nConnection: Keep-Alive\nAccept: text/html, application/json\n${date}`);
+      clientConnection.write(`GET /${uri} HTTP/1.1
+User-Agent: Ricky/2.0.4
+Accept: */*
+Host: ${host}/${uri}
+Connection: Keep-Alive
+Content-Length: 26`);
     }
     else{
       // I'm just a boring URL with nothing else
-      clientConnection.write(`Host: ${host}\nConnection: Keep-Alive\nAccept: text/html, application/json\n${date}`);
+      clientConnection.write(`GET / HTTP/1.1
+User-Agent: Ricky/2.0.4
+Accept: */*
+Host: ${host}
+Connection: Keep-Alive`);
     }
 
   }
@@ -32,25 +54,5 @@ const clientConnection = new net.connect(PORT, function(){
 
 
 
-  clientConnection.on('data', function(data){
-    console.log(" HEY ");
-
-  });
-
-  //clientConnection.end();
-
 });
 
-
-
-
-// POST /apply HTTP/1.1
-// Host: localserver:8080/
-// Connection: Keep-Alive
-// Accept: text/html, application/json
-// Content-Length: 278
-
-
-
-// if first character is '-' that's a flag that it's -I and wants header
-// otherwise it wants a URL and should listen for that.

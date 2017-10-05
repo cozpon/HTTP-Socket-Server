@@ -1,13 +1,27 @@
 // jshint esversion:6
-let PORT = process.env.PORT || 8080;
-//whatever is in the environment variable PORT, or 8080;
-const net = require('net'); // load TCP library
+let PORT = process.env.PORT || 8080; //whatever is in the environment variable PORT, or 8080;
+const net = require('net');
 const fs = require('fs');
 
-const header = function(request, file, method, ok, server, date, contentType, connection){
-  fs.readFile(file, (err, data) => {
+const header = function(request, details, isHeadRequest){
+  fs.readFile(`./${details.template}`, (err, data) => {
     let dataString = data.toString();
-    request.write(`${method}${ok}\n${server}\n${date}\nContent-Type: ${contentType}\nContent-Length: ${dataString.length}\nConnection: ${connection}\n\n${dataString}`, () => {
+    let responseString = `${details.spec}${details.response}
+${details.server}
+${details.date}
+Content-Type: ${details.htmlFile}
+Content-Length: ${dataString.length}
+Connection: ${details.connection}
+
+`;
+
+    if(!isHeadRequest) {
+      responseString+=dataString;
+    }
+    console.log(responseString);
+
+    request.write(responseString, () => {
+      console.log("close connection");
       request.end();
     });
   });
@@ -15,51 +29,60 @@ const header = function(request, file, method, ok, server, date, contentType, co
 
 const server = net.createServer((request) => {
   request.on('data', (data) => {
-    console.log(data.toString());
     let dataRequest = data.toString();
     let splitData = dataRequest.split(`\r\n`);
     let httpArray = splitData[0].split(' ');
+    let path = httpArray[1];
 
-    let server = "Server: " + 'nginx/1.4.6 (Ubuntu)';
-    let method = httpArray[0]; // returns GET or POST or SEND.. the METHOD
-    let path = httpArray[1]; // returns the ULI
-    let spec = httpArray[2]; // returns HTML + version
-    let ok = ' 200 OK'; // hard coded OK
-    let errorNotFound = ' 404 Not Found'; // hard coded error
-    let date = `Date: ${new Date().toUTCString()}`; // gets date of request
-    let htmlFile = 'text/html; charset=utf-8'; // hard code HTML file
-    let cssFile = 'text/css; charset=utf-8';
-    let connType = 'keep-alive';  // hard code connection type
+    const reqDetails = {};
 
+    reqDetails.template = '';
+    reqDetails.spec = httpArray[2]; // returns HTTP/1.1
+    reqDetails.method = httpArray[0]; // returns GET or POST or SEND.. the METHOD
+    reqDetails.date = `Date: ${new Date().toUTCString()}`; // gets date of request
+    reqDetails.server = "Server: " + 'nginx/1.4.6 (Ubuntu)';
+    reqDetails.response = ' 200 OK';
+    reqDetails.connection = 'keep-alive';
+    reqDetails.htmlFile = 'text/html; charset=utf-8';
 
-    if (method === 'HEAD' || method === 'GET'){
+    if (reqDetails.method === 'HEAD' || reqDetails.method === 'GET'){
       switch (path) {
         case '/':
-          header(request, 'index.html', spec, ok, server, date, htmlFile, connType);
+          reqDetails.template = 'index.html';
+          header(request, reqDetails, reqDetails.method === 'HEAD');
           break;
         case '/index.html':
-          header(request, 'index.html', spec, ok, server, date, htmlFile, connType);
+          reqDetails.template = 'index.html';
+          header(request, reqDetails, reqDetails.method === 'HEAD');
           break;
         case '/helium.html':
-          header(request, 'helium.html', spec, ok, server, date, htmlFile, connType);
+          reqDetails.template = 'helium.html';
+          console.log("in here");
+          header(request, reqDetails, reqDetails.method === 'HEAD');
           break;
         case '/hydrogen.html':
-          header(request, 'hydrogen.html', spec, ok, server, date, htmlFile, connType);
+          reqDetails.template = 'hydrogen.html';
+          header(request, reqDetails, reqDetails.method === 'HEAD');
           break;
         case '/styles.css':
-          header(request, 'styles.css', spec, ok, server, date, cssFile, connType);
+          reqDetails.template = 'styles.css';
+          reqDetails.htmlFile = 'text/css; charset=utf-8';
+          header(request, reqDetails, reqDetails.method === 'HEAD');
           break;
         default:
-          header(request, '404.html', spec, errorNotFound, server, date, htmlFile, connType);
+          reqDetails.response = ' 404 Not Found';
+          reqDetails.template = '404.html';
+          header(request, reqDetails, reqDetails.method === 'HEAD');
       }
-    } else header(request, '404.html', spec, errorNotFound, server, date, htmlFile, connType);
-
-
+    }
+    else {
+      reqDetails.response = ' 404 Not Found';
+      reqDetails.template = '404.html';
+      header(request, reqDetails, reqDetails.method === 'HEAD');
+    }
   });
 });
 
 server.listen(PORT, () => {
   console.log(`ServerBound, ${PORT}`, "daddio!");
-  });
-
-
+});
